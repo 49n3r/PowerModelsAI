@@ -60,7 +60,7 @@ for i = 1:samples
 	m = sample(1:l, n, replace=false)
 	delta = Dict{Int, Any}()
 	for (j, k) in enumerate(m)
-		pct = rand(Uniform(0.01,7.0))
+		pct = rand(Uniform(0.01,7.9999999999999964))
 		pd = (pct) * data_["load"]["$(k)"]["pd"]
 		qd = (pct) * data_["load"]["$(k)"]["qd"]
 		data_["load"]["$(k)"]["pd"] = pd

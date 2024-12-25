@@ -52,7 +52,7 @@ result = PowerModels.solve_ac_pf(data, nlp_solver)
 results["base pf"] = data
 results["pf"] = Dict{Int, Any}()
 results["NOpf"] = Dict{Int, Any}()
-samples = 12000
+samples = 1000
 for i = 1:samples
 	data_ = deepcopy(data)
 	l = length(keys(data_["load"]))
@@ -60,7 +60,7 @@ for i = 1:samples
 	m = sample(1:l, n, replace=false)
 	delta = Dict{Int, Any}()
 	for (j, k) in enumerate(m)
-		pct = rand(Uniform(0.01,8.0))
+		pct = rand(Uniform(0.01,14.0))
 		pd = (pct) * data_["load"]["$(k)"]["pd"]
 		qd = (pct) * data_["load"]["$(k)"]["qd"]
 		data_["load"]["$(k)"]["pd"] = pd
