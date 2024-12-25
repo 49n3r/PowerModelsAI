@@ -42,12 +42,12 @@ st.set_page_config(
 )
 
 #----------------- Parameters ---------------------------------#
-logo = ".\etc\Setup Files\LOGO.png"
-lanl_logo = ".\etc\setup Files\LANL-LOGO.png"
-domain_file = "\Training Domain.txt"
-gen_power_limit_file = "\Gen Power Limits.txt"
-julia_params = ".\etc\Setup Files\Julia Parameters.txt"
-retrain_folder = ".\etc\on-the-fly"
+logo = "./etc/Setup Files/LOGO.png"
+lanl_logo = "./etc/setup Files/LANL-LOGO.png"
+domain_file = "/Training Domain.txt"
+gen_power_limit_file = "/Gen Power Limits.txt"
+julia_params = "./etc/Setup Files/Julia Parameters.txt"
+retrain_folder = "./etc/on-the-fly"
 base_training_domian_limit = 5.0
 
 def readTrainingDomain(txt_path):
@@ -102,13 +102,13 @@ st.session_state.getButton = 0
 
 
 num_buses = 10
-dir_path='.\CaseModels'
+dir_path='./CaseModels'
 dir_names = os.listdir(dir_path)
 
 selected_dirname = st.sidebar.selectbox('Select a Case-System', dir_names, index = None,  placeholder="Select a case",key="selected_directory", on_change=disableCaseSelect, args=(False,),)
 
 if "training_domain_UB" not in st.session_state and selected_dirname:
-    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "\\" + selected_dirname + domain_file)
+    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "//" + selected_dirname + domain_file)
     st.session_state.training_domain_UB = st.session_state.training_domain_limit
     training_domain_UB = st.session_state.training_domain_UB
 
@@ -118,7 +118,7 @@ if selected_dirname:
     st.session_state.dir_name_st = os.path.join(dir_path, selected_dirname) #file_selector()
     dir_name = st.session_state.dir_name_st
 
-    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "\\" + selected_dirname + domain_file)
+    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "//" + selected_dirname + domain_file)
     training_domain_limit = st.session_state.training_domain_limit
 
     ######################### Initializations (including helper functions) #########################
@@ -276,7 +276,7 @@ class mld:
 
     def writeJLParse(self):
         file = self.modelFile
-        file = file.replace('\\', "\\\\")
+        file = file.replace('//', "////")
         self.io.write(f'data = PowerModels.parse_file("{file}")\n')
         self.io.write(f'buses = []\n') 
         self.io.write('for (i, gen) in data["gen"]\n')
