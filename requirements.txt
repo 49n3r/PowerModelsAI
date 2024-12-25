@@ -1,6 +1,8 @@
 streamlit
-pytorch
+torch
+torchvision
 julia
+pyjulia
 plotly
 pandas
 numpy
