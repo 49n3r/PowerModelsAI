@@ -1,6 +1,10 @@
 # PowerModel-AI
 
+## Abstract
+The real-time creation of machine-learning models via active or on-the-fly learning has attracted considerable interest across various scientific and engineering disciplines.  These algorithms enable machines to autonomously build models while remaining operational. Through a series of query strategies, the machine can evaluate whether newly encountered data fall outside the scope of the existing training set. In this study, we introduce PowerModel-AI, an end-to-end machine learning software designed to accurately predict alternating current (AC) power flow solutions. We present detailed justifications for our model design choices and demonstrate that selecting the right input features effectively captures the load flow decoupling inherent in power flow equations. Our approach incorporates on-the-fly learning, where power flow calculations are initiated only when the machine detects a need to improve the dataset in regions where the model's performance is sub-optimal, based on specific criteria. Otherwise, the existing model is used for power flow predictions. This study includes analyses of five Texas A&M synthetic power grid cases, encompassing the 14-, 30-, 37-, 200-, and 500-bus systems.  The training and test datasets were generated using PowerModel.jl, an open-source power flow solver/optimizer developed at Los Alamos National Laboratory, United States.
 
+
+# Copyright & License:
 This program is Open-Source under the BSD-3 License.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
