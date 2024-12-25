@@ -1,0 +1,6 @@
+streamlit
+pytorch
+julia
+plotly
+pandas
+numpy
