@@ -34,7 +34,7 @@ import time
 #######################################################################################################
 
 
-############################ INITIALIZATIN FUNCTIONS ###############################################################
+############################ INITIALIZATION FUNCTIONS ###############################################################
 st.set_page_config(
     page_title="PoWerML",
     page_icon="⚡",
@@ -43,7 +43,7 @@ st.set_page_config(
 
 #----------------- Parameters ---------------------------------#
 logo = "./etc/Setup Files/LOGO.png"
-lanl_logo = "./etc/setup Files/LANL-LOGO.png"
+lanl_logo = "./etc/Setup Files/LANL-LOGO.png"
 domain_file = "/Training Domain.txt"
 gen_power_limit_file = "/Gen Power Limits.txt"
 julia_params = "./etc/Setup Files/Julia Parameters.txt"
