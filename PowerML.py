@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-__author__ = "Ugwumadu Chinonso, Jose tabares, and Anup Pandey"
-__credits__ = ["Ugwumadu Chinonso, Jose tabares, and Anup Pandey"]
+__author__ = "Ugwumadu Chinonso, Jose Tabares, and Anup Pandey"
+__credits__ = ["Ugwumadu Chinonso, Jose Tabares, and Anup Pandey"]
 __version__ = "1.0"
 __email__ = "cugwumadu@lanl.gov"
 
@@ -31,8 +31,8 @@ import pandas as pd
 import time
 
 
-###################################################
-####################################################
+#######################################################################################################
+
 
 ############################ INITIALIZATIN FUNCTIONS ###############################################################
 st.set_page_config(
@@ -42,10 +42,12 @@ st.set_page_config(
 )
 
 #----------------- Parameters ---------------------------------#
-logo = "./etc/Setup Files/LOGO.png"
-domain_file = "/Training Domain.txt"
-julia_params = "./etc/Setup Files/Julia Parameters.txt"
-retrain_folder = "./etc/on-the-fly"
+logo = ".\etc\Setup Files\LOGO.png"
+lanl_logo = ".\etc\setup Files\LANL-LOGO.png"
+domain_file = "\Training Domain.txt"
+gen_power_limit_file = "\Gen Power Limits.txt"
+julia_params = ".\etc\Setup Files\Julia Parameters.txt"
+retrain_folder = ".\etc\on-the-fly"
 base_training_domian_limit = 5.0
 
 def readTrainingDomain(txt_path):
@@ -56,6 +58,20 @@ def readTrainingDomain(txt_path):
 def writeTrainingDomain(txt_path, new_domain):
     with open(txt_path, "w") as o:
        o.write(new_domain)
+
+def readGenPowerLimit(txt_path):
+    with open(txt_path, "r") as f:
+        lines = f.readlines()
+        power_limit_var = lines[0].rstrip('\n').split()
+        power_limit_val = np.array(lines[1].rstrip('\n').split()).astype(np.float64)
+    return power_limit_var, power_limit_val
+
+def writeGenPowerLimit(txt_path, gen_power_limit_dict):
+    with open(txt_path, 'w') as o:
+        line_one = [var_name + "\t\t" for var_name in gen_power_limit_dict.keys()]
+        o.write("".join(line_one)+'\n')
+        line_two = [str(val) + "\t\t\t" for val in gen_power_limit_dict.values()]
+        o.write("".join(line_two)+'\n')
 
 def writeJuliaPath(txt_path, julia_path):
     with open(txt_path, "w") as o:
@@ -86,10 +102,15 @@ st.session_state.getButton = 0
 
 
 num_buses = 10
-dir_path='./CaseModels'
+dir_path='.\CaseModels'
 dir_names = os.listdir(dir_path)
 
-selected_dirname = st.sidebar.selectbox('Select a Case-System', dir_names, index = None,  placeholder="Select a case", on_change=disableCaseSelect, args=(False,),)
+selected_dirname = st.sidebar.selectbox('Select a Case-System', dir_names, index = None,  placeholder="Select a case",key="selected_directory", on_change=disableCaseSelect, args=(False,),)
+
+if "training_domain_UB" not in st.session_state and selected_dirname:
+    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "\\" + selected_dirname + domain_file)
+    st.session_state.training_domain_UB = st.session_state.training_domain_limit
+    training_domain_UB = st.session_state.training_domain_UB
 
 
 if selected_dirname:
@@ -97,7 +118,7 @@ if selected_dirname:
     st.session_state.dir_name_st = os.path.join(dir_path, selected_dirname) #file_selector()
     dir_name = st.session_state.dir_name_st
 
-    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "//" + selected_dirname + domain_file)
+    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "\\" + selected_dirname + domain_file)
     training_domain_limit = st.session_state.training_domain_limit
 
     ######################### Initializations (including helper functions) #########################
@@ -105,7 +126,6 @@ if selected_dirname:
     if "training_domain" not in  st.session_state:
         st.session_state.training_domain = 2.5 # the max to which we have trained the model
         training_domain = st.session_state.training_domain
-
 
         st.session_state.training_domain_UB = training_domain_limit
         training_domain_UB = st.session_state.training_domain_UB
@@ -122,35 +142,55 @@ if "training_domain" in  st.session_state:
 
 
 
-#------------------ Model and Feature Names ------------------#
-st.session_state.gen_model_name = '/_genModel_MAG.pth'
-gen_model_name = st.session_state.gen_model_name 
+#------------------ Model and Feature File Names ------------------#
+st.session_state.gen_model_name_MW = '/_genModel_MW.pth'
+gen_model_name_MW = st.session_state.gen_model_name_MW 
+st.session_state.gen_model_name_Mvar = '/_genModel_Mvar.pth'
+gen_model_name_Mvar = st.session_state.gen_model_name_Mvar 
 st.session_state.gen_features = "/_genFeatures.npz"
 gen_features = st.session_state.gen_features
-st.session_state.gen_targets = "/_genTargets_MAG.npz"
-gen_targets= st.session_state.gen_targets
+st.session_state.gen_targets_MW = "/_genTargets_MW.npz"
+gen_targets_MW= st.session_state.gen_targets_MW
+st.session_state.gen_targets_Mvar = "/_genTargets_Mvar.npz"
+gen_targets_Mvar= st.session_state.gen_targets_Mvar
 
-st.session_state.base_model_name = '/_BaseModel_MAG.pth'
-base_model_name =st.session_state.base_model_name
-st.session_state.base_features = "/_BaseFeatures.npz"
-base_features= st.session_state.base_features
-st.session_state.base_targets = "/_BaseTargets_MAG.npz"
-base_targets = st.session_state.base_targets
+st.session_state.base_model_name_vpu = '/_baseModel_vpu.pth'
+base_model_name_vpu = st.session_state.base_model_name_vpu 
+st.session_state.base_model_name_vang = '/_baseModel_vang.pth'
+base_model_name_vang = st.session_state.base_model_name_vang
+st.session_state.base_features_vpu = "/_baseFeatures_vpu.npz"
+base_features_vpu= st.session_state.base_features_vpu
+st.session_state.base_features_vang = "/_baseFeatures_vang.npz"
+base_features_vang= st.session_state.base_features_vang
+st.session_state.base_targets_vpu = "/_baseTargets_vpu.npz"
+base_targets_vpu = st.session_state.base_targets_vpu
+st.session_state.base_targets_vang = "/_baseTargets_vang.npz"
+base_targets_vang = st.session_state.base_targets_vang
 
-st.session_state.updated_bus_model_name = '/_updatedModel_MAG.pth'
-updated_bus_model_name = st.session_state.updated_bus_model_name
-st.session_state.retrain_bus_features = "/_RetrainFeatures.npz"
-retrain_bus_features = st.session_state.retrain_bus_features
-st.session_state.retrain_bus_targets = "/_RetrainTargets_MAG.npz"
-retrain_bus_targets = st.session_state.retrain_bus_targets
+st.session_state.updated_model_name_vpu  = '/_updatedModel_vpu.pth'
+updated_model_name_vpu  = st.session_state.updated_model_name_vpu 
+st.session_state.updated_model_name_vang  = '/_updatedModel_vang.pth'
+updated_model_name_vang   = st.session_state.updated_model_name_vang  
+st.session_state.retrain_bus_features_vpu = "/_updatedFeatures_vpu.npz"
+retrain_bus_features_vpu = st.session_state.retrain_bus_features_vpu
+st.session_state.retrain_bus_features_vang = "/_updatedFeatures_vang.npz"
+retrain_bus_features_vang = st.session_state.retrain_bus_features_vang
+st.session_state.retrain_bus_targets_vpu = "/_updatedTargets_vpu.npz"
+retrain_bus_targets_vpu = st.session_state.retrain_bus_targets_vpu
+st.session_state.retrain_bus_targets_vang = "/_updatedTargets_vang.npz"
+retrain_bus_targets_vang = st.session_state.retrain_bus_targets_vang
 
-st.session_state.updated_gen_model_name = '/_updatedGenModel_MAG.pth'
-updated_gen_model_name = st.session_state.updated_gen_model_name
-st.session_state.retrain_gen_features = "/_RetrainGenFeatures.npz"
+st.session_state.updated_gen_model_name_MW = '/_updatedGenModel_MW.pth'
+updated_gen_model_name_MW = st.session_state.updated_gen_model_name_MW
+st.session_state.updated_gen_model_name_Mvar = '/_updatedGenModel_Mvar.pth'
+updated_gen_model_name_Mvar = st.session_state.updated_gen_model_name_Mvar
+st.session_state.retrain_gen_features = "/_updatedGenFeatures.npz"
 retrain_gen_features = st.session_state.retrain_gen_features
-st.session_state.retrain_gen_targets = "/_RetrainGenTargets_MAG.npz"
-retrain_gen_targets = st.session_state.retrain_gen_targets
-
+st.session_state.retrain_gen_targets_MW = "/_updatedGenTargets_MW.npz"
+retrain_gen_targets_MW = st.session_state.retrain_gen_targets_MW
+st.session_state.retrain_gen_targets_Mvar = "/_updatedGenTargets_Mvar.npz"
+retrain_gen_targets_Mvar = st.session_state.retrain_gen_targets_Mvar
+#------------------ END OF Model and Feature File Names ------------------#
 
 st.session_state.change_list = []
 change_list = st.session_state.change_list
@@ -166,7 +206,7 @@ def plot_map(state, plot_container, buses, branches, map_title):
         size='size',
         size_max=12, 
         zoom=9,
-        hover_name = "BusNum",              
+        hover_name = "BusNum",             
     )
     branch_data = {
         'lats' :    [],
@@ -317,60 +357,9 @@ class mld:
 ####---------------- CLASS FOR JULIA TO RUN POWER MODEL ---------------#####
 
 
-#------------------ Model and Feature Names ------------------#
+#------------------ COLLECT POWERMODEL DATA ------------------------------------#
 
-# def collectGridData(dir_path_): 
-#     if __name__ == '__main__':
-#         filename = ""
-#         holder = 1
-                        
-#         for file in os.listdir(dir_path_):
-#             if '.json' in file:
-#                 filename = os.path.join(dir_path_, file)
-#                 f = open(filename)
-#                 data_ = json.load(f)
-#                 base_system = data_["base pf"]
-                    
-#                 if holder == 1:
-#                     base_gen = base_system['gen']
-#                     base_buses_wt_load = base_system['load']
-#                     base_vpu = base_system["bus"]
-#                     NOpf_data = data_["NOpf"]
-#                     pf_data = data_["pf"]
-#                     pf_iterations = np.array(list(pf_data.keys()))
-                    
-#                     base_gen_MW = []
-#                     base_gen_MVar = []
-#                     base_load_MW = []
-#                     base_load_MVar = []
-                    
-#                     buses_ = []
-#                     buses_wt_gen_ = []
-#                     buses_wt_load_ = []
-                    
-#                     for the_bus_ in range(1,  num_buses + 1):
-#                         buses_.append(int(the_bus_))  # same as keys from PM
-                        
-#                     for the_bus_ in range(1, len(base_gen.keys()) + 1): #data_dict_genPower.keys():
-#                         buses_wt_gen_.append(int(base_gen[str(the_bus_)]['gen_bus']))
-#                         base_gen_MW.append(base_gen[str(the_bus_)]['pg'])
-#                         base_gen_MVar.append(base_gen[str(the_bus_)]['qg'])
-
-    
-#                     for the_bus_ in range(1, len(base_buses_wt_load.keys()) + 1):
-#                         buses_wt_load_.append(int(base_buses_wt_load[str(the_bus_)]['load_bus']))
-#                         base_load_MW.append(base_buses_wt_load[str(the_bus_)]['pd'])
-#                         base_load_MVar.append(base_buses_wt_load[str(the_bus_)]['qd'])
-
-
-#                     buses_ = np.array(buses_)
-#                     buses_wt_gen_ = np.array(buses_wt_gen_)
-#                     buses_wt_load_ = np.array(buses_wt_load_)
-
-#                 return buses_, buses_wt_load_, buses_wt_gen_, base_gen_MW, base_gen_MVar, base_load_MW, base_load_MVar, base_vpu
-
-
-def collectGridData(dir_path_, base_case): #, buses_wt_load_, buses_wt_gen_, percent_change_, num_buses_):
+def collectGridData(dir_path_, base_case): 
     if __name__ == '__main__':
         filename = ""
         holder = 1
@@ -390,8 +379,8 @@ def collectGridData(dir_path_, base_case): #, buses_wt_load_, buses_wt_gen_, per
                 pf_data = data_["pf"]
                 pf_iterations = np.array(list(pf_data.keys()))
 
-                print(f"{len(NOpf_data.keys())} out of {len(NOpf_data.keys()) + len(pf_data.keys())} cases did not solve")
-                print(len(pf_iterations))
+                feasible_solution_report = f"{len(pf_data.keys())} out of {len(NOpf_data.keys()) + len(pf_data.keys())} events have feaseable solutions"
+                # print(len(pf_iterations))
 
                 base_gen_MW = []
                 base_gen_MVar = []
@@ -467,8 +456,15 @@ def collectGridData(dir_path_, base_case): #, buses_wt_load_, buses_wt_gen_, per
                         bus_vangle_arr = np.empty([len(pf_iterations), num_buses_])
                         load_MW_arr = np.empty([len(pf_iterations),len(buses_wt_load_)])
                         load_Mvar_arr = np.empty([len(pf_iterations),len(buses_wt_load_)])
+
                         gen_MW_arr = np.zeros([len(pf_iterations), num_buses_])
+                        gen_Mvar_arr = np.zeros([len(pf_iterations), num_buses_])
+
                         base_gen_MW_arr = np.zeros([len(pf_iterations), num_buses_])
+                        base_gen_Mvar_arr = np.zeros([len(pf_iterations), num_buses_])
+
+                        sum_generation_MW = np.zeros(len(pf_iterations))
+                        sum_generation_Mvar = np.zeros(len(pf_iterations))
                         holder += 1
 
                     # Get the load data
@@ -493,164 +489,285 @@ def collectGridData(dir_path_, base_case): #, buses_wt_load_, buses_wt_gen_, per
                         genMW_data = [data_dict_genPower[str(mw)]['pg'] for mw in range(1, len(data_dict_genPower.keys()) + 1)]
                         genMvar_data = [data_dict_genPower[str(mw)]['qg'] for mw in range(1, len(data_dict_genPower.keys()) + 1)]
                         
-                        gen_MW_arr[run_iter][buses_wt_gen_-1] = np.squeeze(genMW_data) 
+                        sum_generation_MW[run_iter] = np.sum(genMW_data)
+                        sum_generation_Mvar[run_iter] = np.sum(genMvar_data)
+
+                        gen_MW_arr[run_iter][buses_wt_gen_-1] = np.squeeze(genMW_data)
+                        gen_Mvar_arr[run_iter][buses_wt_gen_-1] = np.squeeze(genMvar_data) 
+
                         base_gen_MW_arr[run_iter][buses_wt_gen_-1] = np.squeeze(base_gen_MW)
+                        base_gen_Mvar_arr[run_iter][buses_wt_gen_-1] = np.squeeze(base_gen_MVar)
 
     if base_case:
         return buses_, buses_wt_load_, buses_wt_gen_, base_gen_MW, base_gen_MVar, base_load_MW, base_load_MVar, base_vpu
     else:            
-        return  bus_vpu_arr, bus_vangle_arr, load_MW_arr, load_Mvar_arr, gen_MW_arr, base_gen_MW_arr
+        return  bus_vpu_arr, bus_vangle_arr, load_MW_arr, load_Mvar_arr, gen_MW_arr, gen_Mvar_arr, base_gen_MW_arr, base_gen_Mvar_arr, sum_generation_MW, sum_generation_Mvar, feasible_solution_report
 
 ##########################################################################################################################
 
 def runModel():
     if training_domain_UB <= base_training_domian_limit:
-        tab1.info("Using base model. Within base training domian")
-        bus_model_file = base_model_name
-        gen_model_file = gen_model_name
-        bus_feature_file = base_features
-        bus_target_file = base_targets
+        tab1.info(f"Using base model. Within base training domian ({base_training_domian_limit:.2f})")
+        vpu_model_file = base_model_name_vpu 
+        genMW_model_file = gen_model_name_MW
+        vpu_feature_file = base_features_vpu
+        vpu_target_file = base_targets_vpu
         gen_feature_file = gen_features
-        gen_target_file = gen_targets
+        genMW_target_file = gen_targets_MW
+
+        genMW_model =  gen_model_name_MW
+        genMvar_model = gen_model_name_Mvar
+        vpu_model = base_model_name_vpu
+        vang_model = base_model_name_vang
+
+        vang_model_file = base_model_name_vang 
+        genMvar_model_file = gen_model_name_Mvar
+        vang_feature_file = base_features_vang
+        vang_target_file = base_targets_vang
+        genMvar_target_file = gen_targets_Mvar
     else:
-        if os.path.exists(dir_name + retrain_bus_targets): 
-            tab1.info(f"Using updated model. Current Training Upper limit is {training_domain_UB}")
-            bus_model_file = updated_bus_model_name
-            gen_model_file = updated_gen_model_name
-            bus_feature_file = retrain_bus_features
-            bus_target_file = retrain_bus_targets
+        if os.path.exists(dir_name + retrain_bus_targets_vpu) and training_domain_UB <= training_domain_limit: 
+            tab1.info(f"Using updated model. The current training upper limit is {training_domain_limit:.2f}")
+            vpu_model_file = updated_model_name_vpu 
+            genMW_model_file = updated_gen_model_name_MW
+            vpu_feature_file = retrain_bus_features_vpu
+            vpu_target_file = retrain_bus_targets_vpu
             gen_feature_file = retrain_gen_features
-            gen_target_file = retrain_gen_targets
+            genMW_target_file = retrain_gen_targets_MW
+
+            genMW_model =  updated_gen_model_name_MW
+            genMvar_model = updated_gen_model_name_Mvar
+            vpu_model = updated_model_name_vpu
+            vang_model = updated_model_name_vang
+
+            vang_model_file = updated_model_name_vang
+            genMvar_model_file = updated_gen_model_name_Mvar
+            vang_feature_file = retrain_bus_features_vang
+            vang_target_file = retrain_bus_targets_vang
+            genMvar_target_file = retrain_gen_targets_Mvar
+
+        elif os.path.exists(dir_name + retrain_bus_targets_vpu) and training_domain_UB > training_domain_limit: 
+            tab1.info(f"Using updated model. Above the updated training domain upper limit ({training_domain_limit:.2f})")
+            vpu_model_file = updated_model_name_vpu 
+            genMW_model_file = updated_gen_model_name_MW
+            vpu_feature_file = retrain_bus_features_vpu
+            vpu_target_file = retrain_bus_targets_vpu
+            gen_feature_file = retrain_gen_features
+            genMW_target_file = retrain_gen_targets_MW
+
+            genMW_model =  updated_gen_model_name_MW
+            genMvar_model = updated_gen_model_name_Mvar
+            vpu_model = updated_model_name_vpu
+            vang_model = updated_model_name_vang
+
+            vang_model_file = updated_model_name_vang
+            genMvar_model_file = updated_gen_model_name_Mvar
+            vang_feature_file = retrain_bus_features_vang
+            vang_target_file = retrain_bus_targets_vang
+            genMvar_target_file = retrain_gen_targets_Mvar
         else: 
-            tab1.info("Using base model. Outside base training domian")
-            bus_model_file = base_model_name
-            gen_model_file = gen_model_name
-            bus_feature_file = base_features
-            bus_target_file = base_targets
+            tab1.info(f"Using base model. Above the base training domain ({base_training_domian_limit:.2f}).")
+            vpu_model_file = base_model_name_vpu 
+            genMW_model_file = gen_model_name_MW
+            vpu_feature_file = base_features_vpu
+            vpu_target_file = base_targets_vpu
             gen_feature_file = gen_features
-            gen_target_file = gen_targets
+            genMW_target_file = gen_targets_MW
+
+            genMW_model =  gen_model_name_MW
+            genMvar_model = gen_model_name_Mvar
+            vpu_model = base_model_name_vpu
+            vang_model = base_model_name_vang
+
+            vang_model_file = base_model_name_vang 
+            genMvar_model_file = gen_model_name_Mvar
+            vang_feature_file = base_features_vang
+            vang_target_file = base_targets_vang
+            genMvar_target_file = gen_targets_Mvar
 
 
-
-    if os.path.exists(dir_name + bus_model_file):   
-        ## Load Existing data
-        features = torch.tensor(np.load(dir_name + bus_feature_file)["arr_0"])
-        targets = torch.tensor(np.load(dir_name + bus_target_file)["arr_0"])
+    if os.path.exists(dir_name + vpu_model_file):   
+        #print("\nLoad Existing VPU model")
+        features = torch.tensor(np.load(dir_name + vpu_feature_file)["arr_0"])
+        targets = torch.tensor(np.load(dir_name + vpu_target_file)["arr_0"])
             
         # Define parameters
         input_size, hidden1_size, hidden2_size, output_size = defineParameters(features, targets)
 
         # import the model
-        st.session_state.base_model = TwoHiddenLayerNN(input_size, hidden1_size, hidden2_size, output_size)
-        base_model = st.session_state.base_model
-        base_model.load_state_dict(torch.load(dir_name + base_model_name))
-        base_model.eval()
+        st.session_state.bus_model_vpu = TwoHiddenLayerNN(input_size, hidden1_size, hidden2_size, output_size)
+        bus_model_vpu = st.session_state.bus_model_vpu
+        bus_model_vpu.load_state_dict(torch.load(dir_name + vpu_model ))
+        bus_model_vpu.eval()
     
-    if os.path.exists(dir_name + gen_model_file):   
-        ## Load Existing data
+    if os.path.exists(dir_name + vang_model_file):   
+        #print("\nLoad Existing Vangle Model")
+        features = torch.tensor(np.load(dir_name + vang_feature_file)["arr_0"])
+        targets = torch.tensor(np.load(dir_name + vang_target_file)["arr_0"])
+            
+        # Define parameters
+        input_size, hidden1_size, hidden2_size, output_size = defineParameters(features, targets)
+
+        # import the model
+        st.session_state.bus_model_vang = TwoHiddenLayerNN(input_size, hidden1_size, hidden2_size, output_size)
+        bus_model_vang = st.session_state.bus_model_vang
+        bus_model_vang.load_state_dict(torch.load(dir_name + vang_model))
+        bus_model_vang.eval()
+
+    if os.path.exists(dir_name + genMW_model_file):   
+        #print("\nLoad Existing Generator MW model")
         features = torch.tensor(np.load(dir_name + gen_feature_file)["arr_0"])
-        targets = torch.tensor(np.load(dir_name + gen_target_file)["arr_0"])
+        targets = torch.tensor(np.load(dir_name + genMW_target_file)["arr_0"])
         
         # Define parameters
         input_size, hidden1_size, hidden2_size, output_size = defineParameters(features, targets)
 
         # import the model
-        st.session_state.gen_model = TwoHiddenLayerNN(input_size, hidden1_size, hidden2_size, output_size)
-        gen_model = st.session_state.gen_model
-        gen_model.load_state_dict(torch.load(dir_name + gen_model_name))
-        gen_model.eval()
+        st.session_state.gen_model_MW = TwoHiddenLayerNN(input_size, hidden1_size, hidden2_size, output_size)
+        gen_model_MW = st.session_state.gen_model_MW
+        gen_model_MW.load_state_dict(torch.load(dir_name + genMW_model))
+        gen_model_MW.eval()
 
-    return base_model, gen_model
-
-# def runModel():
-#     if training_domain_UB <= base_training_domian_limit:
-#         model_name = 
-#     if os.path.exists(dir_name + base_model_name):   
-#         ## Load Existing data
-#         features = torch.tensor(np.load(dir_name + base_features)["arr_0"])
-#         targets = torch.tensor(np.load(dir_name + base_targets)["arr_0"])
-            
-#         # Define parameters
-#         input_size, hidden1_size, hidden2_size, output_size = defineParameters(features, targets)
-
-#         # import the model
-#         st.session_state.base_model = TwoHiddenLayerNN(input_size, hidden1_size, hidden2_size, output_size)
-#         base_model = st.session_state.base_model
-#         base_model.load_state_dict(torch.load(dir_name + base_model_name))
-#         base_model.eval()
-    
-#     if os.path.exists(dir_name + gen_model_name):   
-#         ## Load Existing data
-#         features = torch.tensor(np.load(dir_name + gen_features)["arr_0"])
-#         targets = torch.tensor(np.load(dir_name + gen_targets)["arr_0"])
+    if os.path.exists(dir_name + genMvar_model_file):   
+        #print("\nLoad Existing Generator Mvar model")
+        features = torch.tensor(np.load(dir_name + gen_feature_file)["arr_0"])
+        targets = torch.tensor(np.load(dir_name + genMvar_target_file)["arr_0"])
         
-#         # Define parameters
-#         input_size, hidden1_size, hidden2_size, output_size = defineParameters(features, targets)
+        # Define parameters
+        input_size, hidden1_size, hidden2_size, output_size = defineParameters(features, targets)
 
-#         # import the model
-#         st.session_state.gen_model = TwoHiddenLayerNN(input_size, hidden1_size, hidden2_size, output_size)
-#         gen_model = st.session_state.gen_model
-#         gen_model.load_state_dict(torch.load(dir_name + gen_model_name))
-#         gen_model.eval()
+        # import the model
+        st.session_state.gen_model_Mvar = TwoHiddenLayerNN(input_size, hidden1_size, hidden2_size, output_size)
+        gen_model_Mvar = st.session_state.gen_model_Mvar
+        gen_model_Mvar.load_state_dict(torch.load(dir_name + genMvar_model))
+        gen_model_Mvar.eval()
 
-#     return base_model, gen_model
+    return bus_model_vpu, bus_model_vang, gen_model_MW, gen_model_Mvar
+
 
 def generateRetrainModels(retrain_json_loc):
     ########################## Gen Model ###############################################
-    gen_features_r, gen_targets_r = genFeatureEngineering(retrain_json_loc) 
+
+    #-------------------- Gen MW Model --------------------------------------------------#
+    gen_features_r, gen_targets_MW_r = genFeatureEngineering(retrain_json_loc, "MW") 
 
     # Save Data for ML processing
     np.savez(dir_name + retrain_gen_features, gen_features_r)
-    np.savez(dir_name + retrain_gen_targets, gen_targets_r)
+    np.savez(dir_name + retrain_gen_targets_MW, gen_targets_MW_r)
 
     #generate Gen model
     initial_gen_model = []
-    generateModel(initial_gen_model, gen_features_r, gen_targets_r, "generator model")
+    generateModel(initial_gen_model, gen_features_r, gen_targets_MW_r, "generator MW model")
 
-    ########################## bus Model ###############################################
-    bus_features_r, bus_targets_r = busFeatureEngineering(retrain_json_loc) 
+    #-------------------- Gen Mvar Model --------------------------------------------------#
+    _, gen_targets_Mvar_r = genFeatureEngineering(retrain_json_loc, "Mvar") 
 
     # Save Data for ML processing
-    np.savez(dir_name + retrain_bus_features, bus_features_r)
-    np.savez(dir_name + retrain_bus_targets, bus_targets_r)
+    #np.savez(dir_name + retrain_gen_features, gen_features_r)
+    np.savez(dir_name + retrain_gen_targets_Mvar, gen_targets_Mvar_r)
+
+    #generate Gen model
+    initial_gen_model = []
+    generateModel(initial_gen_model, gen_features_r, gen_targets_Mvar_r, "generator Mvar model")  
+    #*********************************************************************************************#  
+
+    ########################## Bus Model ###############################################
+
+    #-------------------- Bus VPU Model --------------------------------------------------#
+    bus_vpu_features_r, bus_vpu_targets_r = busFeatureEngineering(retrain_json_loc, "vpu") 
+
+    # Save Data for ML processing
+    np.savez(dir_name + retrain_bus_features_vpu, bus_vpu_features_r)
+    np.savez(dir_name + retrain_bus_targets_vpu, bus_vpu_targets_r)
 
     #generate Gen model
     initial_bus_model = []
-    generateModel(initial_bus_model, bus_features_r, bus_targets_r, "bus model")
+    generateModel(initial_bus_model, bus_vpu_features_r, bus_vpu_targets_r, "bus vpu model")
 
-    #gen_model = generateModel(initial_model, features_r, targets_r, "generator model")
-    #return gen_model
+    #-------------------- Bus VANGLE Model --------------------------------------------------#
+    bus_vang_features_r, bus_vang_targets_r = busFeatureEngineering(retrain_json_loc, "vangle") 
+
+    # Save Data for ML processing
+    np.savez(dir_name + retrain_bus_features_vang, bus_vang_features_r)
+    np.savez(dir_name + retrain_bus_targets_vang, bus_vang_targets_r)
+
+    #generate Gen model
+    initial_bus_model = []
+    generateModel(initial_bus_model, bus_vang_features_r, bus_vang_targets_r, "bus vangle model")
+   #*********************************************************************************************# 
+
+
 
 ###################################### F E A T U R E  E N G I N E E R I N G ################################################
 
-def genFeatureEngineering(retrain_json_loc):
+def on_the_fly_update(retrain_json_loc):
     dir_path = os.path.join(os.getcwd(), retrain_json_loc)
 
-    _, _, load_MW_arr, load_Mvar_arr, gen_MW_arr, base_gen_MW_arr = collectGridData(dir_path, base_case = 0)
+    _, _, _, _, _, _, _, _, _, _, feasible_solution_report = collectGridData(dir_path, base_case = 0)
 
-    features = torch.cat((torch.tensor(load_MW_arr), torch.tensor(load_Mvar_arr),torch.tensor(base_gen_MW_arr)),dim =1) #
-    targets = torch.tensor(gen_MW_arr)
+    return feasible_solution_report
+
+
+def genFeatureEngineering(retrain_json_loc, gen_power_type):
+    dir_path = os.path.join(os.getcwd(), retrain_json_loc)
+
+    _, _, load_MW_arr, load_Mvar_arr, gen_MW_arr, gen_Mvar_arr, base_gen_MW_arr,\
+         base_gen_Mvar_arr, sum_generation_MW, sum_generation_Mvar, _ = collectGridData(dir_path, base_case = 0)
+
+    
+    features = torch.cat((torch.tensor(load_MW_arr), torch.tensor(load_Mvar_arr),\
+                            torch.tensor(base_gen_MW_arr), torch.tensor(base_gen_Mvar_arr)),dim =1) #
+    print(f"The size of Generator Feature for {num_changes} changes is {features.shape}")
+
+    if gen_power_type == "MW":
+        targets = torch.tensor(gen_MW_arr)
+        #tab1.write(f"Sigma_P_max = {np.max(sum_generation_MW)}    Sigma_P_min = {np.min(sum_generation_MW)}")
+        print(f"The size of Generator MW Targets for {num_changes} changes is {targets.shape}")
+
+    if gen_power_type == "Mvar":
+        targets = torch.tensor(gen_Mvar_arr)
+        #tab1.write(f"Sigma_Q_max = {np.round(np.max(sum_generation_Mvar),4)}    Sigma_Q_min = {np.round(np.min(sum_generation_Mvar),4)}")
+        print(f"The size of Generator Mvar Targets for {num_changes} changes is {targets.shape}")
+
+    power_limit_dict_training = {"Sigma_P_max":np.round(np.max(sum_generation_MW),4), "Sigma_P_min":np.round(np.min(sum_generation_MW),4),
+                                  "Sigma_Q_max":np.round(np.max(sum_generation_Mvar),4), "Sigma_Q_min":np.round(np.min(sum_generation_Mvar),4)}
+    
+    tab1.write(power_limit_dict_training)
+    writeGenPowerLimit(retrain_folder+ "\\" + selected_dirname + gen_power_limit_file, power_limit_dict_training)
+
     return features, targets
 
 
 
-def busFeatureEngineering(retrain_json_loc):
+def busFeatureEngineering(retrain_json_loc, voltage_type):
     dir_path = os.path.join(os.getcwd(), retrain_json_loc)
 
-    bus_vpu_arr, _, load_MW_arr, load_Mvar_arr, gen_MW_arr, _ = collectGridData(dir_path, base_case = 0)
+    bus_vpu_arr, bus_vangle_arr, load_MW_arr, load_Mvar_arr, gen_MW_arr, gen_Mvar_arr,_, _, _, _, _ = collectGridData(dir_path, base_case = 0)
 
     num_buses_wt_load = len(buses_wt_load) # Number of buses with loads
     num_changes = len(bus_vpu_arr)     # Number of features (training data)
 
-    features = torch.cat((torch.tensor(load_MW_arr), torch.tensor(load_Mvar_arr),torch.tensor(gen_MW_arr)),dim =1) #       
-    print(f"The size of FEATURES for {num_changes} changes to {num_buses_wt_load} buses with load is {features.shape}")
+    if voltage_type == "vpu":
 
-    targets = torch.tensor(bus_vpu_arr) 
-    print(f"The size of OUTPUT for {num_changes} changes to {num_buses_wt_load} buses with load is {targets.shape}")
+        features = torch.cat((torch.tensor(load_MW_arr), torch.tensor(load_Mvar_arr),torch.tensor(gen_Mvar_arr)),dim =1)       
+        print(f"The size of VPU FEATURES for {num_changes} changes to {num_buses_wt_load} buses with load is {features.shape}")
+
+        targets = torch.tensor(bus_vpu_arr) 
+        print(f"The size of VPU OUTPUTS for {num_changes} changes to {num_buses_wt_load} buses with load is {targets.shape}")
+
+    if voltage_type == "vangle":
+
+        features = torch.cat((torch.tensor(load_MW_arr), torch.tensor(load_Mvar_arr),torch.tensor(gen_MW_arr)),dim =1)  
+        print(f"The size of Vangle FEATURES for {num_changes} changes to {num_buses_wt_load} buses with load is {features.shape}")     
+        
+        targets = torch.tensor(bus_vangle_arr) 
+        print(f"The size of Vangle OUTPUTS for {num_changes} changes to {num_buses_wt_load} buses with load is {targets.shape}")
 
     return features, targets
 
 ###################################### E N D OF F E A T U R E  E N G I N E E R I N G ################################################
+
+
 
 ########################### ML Functions ################################################################################
 # Define parameters
@@ -668,9 +785,9 @@ class TwoHiddenLayerNN(nn.Module):
     def __init__(self, input_size, hidden1_size, hidden2_size, output_size):
         super(TwoHiddenLayerNN, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden1_size)
-        self.relu1 = nn.ReLU()
+        self.relu1 = nn.LeakyReLU()
         self.fc2 = nn.Linear(hidden1_size, hidden2_size)
-        self.relu2 = nn.ReLU()
+        self.relu2 = nn.LeakyReLU()
         self.fc3 = nn.Linear(hidden2_size, output_size)
         self.bias = nn.Parameter(torch.zeros(output_size))  # Adding bias
         
@@ -710,7 +827,7 @@ def trainValidateModel(model, num_epochs, train_loader, val_loader, optimizer, c
         val_losses.append(val_loss)
         
         print(f"Epoch {epoch+1}/{num_epochs}, Training Loss: {epoch_loss:.6f}, Validation Loss: {val_loss:.6f}", end="\r")
-
+    print()
     return model, train_losses, val_losses
 
 #-------------------------------------------------- on-the-fly-learning ------------------------------------------------------------------#
@@ -730,7 +847,7 @@ def generateModel(model, features, targets, model_type):
     num_samples = features.shape[0]
     num_train_samples = int(num_samples * 0.7)  # 70%
     num_test_samples = int(num_samples * 0.15)   # 15%
-    num_val_samples = num_samples - num_train_samples - num_test_samples #15%
+    # num_val_samples = num_samples - num_train_samples - num_test_samples #15% PLACEHOLDER
 
     train_features = features[:num_train_samples].to(torch.float32)
     train_targets = targets[:num_train_samples].to(torch.float32)
@@ -749,7 +866,7 @@ def generateModel(model, features, targets, model_type):
 
 
     # Train the model with base data
-    num_epochs = 200
+    num_epochs = 300
     model, train_losses, val_losses = trainValidateModel(model, num_epochs, train_loader, val_loader, optimizer, criterion, device='cpu')
 
     # Test the model
@@ -766,17 +883,34 @@ def generateModel(model, features, targets, model_type):
 
 
     # Save the final weights to reuse when needed.
-    if model_type == "bus model":
-        print("*********** NEW FEATURES AND NEW ML MODEL CREATED **************************")
-        torch.save(model.state_dict(), dir_name + updated_bus_model_name)
-        print(f"Updated model saved as {updated_bus_model_name}")
-        print("*********** UPDATED ML MODEL CREATED **************************")
-    elif model_type == "generator model":
-        torch.save(model.state_dict(), dir_name + updated_gen_model_name)
-        print(f"Updated model saved as {updated_gen_model_name}")
-        print("*********** GENERATOR POWER PREDICTOR MODEL HAS BEEN CREATED **************************")
+    if model_type == "bus vpu model":
+        print("*********** CREATING UPDATED VOLTAGE MAGNITUDE MODEL **************************")
+        torch.save(model.state_dict(), dir_name + updated_model_name_vpu )
+        print(f"Updated model saved as {updated_model_name_vpu }")
+        print("*******************************************************************************")
+        print()
 
-    #return model
+    elif model_type == "bus vangle model":
+        print("*********** CREATING UPDATED VOLTAGE ANGLE MODEL **************************")
+        torch.save(model.state_dict(), dir_name + updated_model_name_vang )
+        print(f"Updated model saved as {updated_model_name_vang }")
+        print("***************************************************************************")
+        print()
+
+    elif model_type == "generator MW model":
+        print("*********** CREATING UPDATED GENERATOR MW MODEL **************************")
+        torch.save(model.state_dict(), dir_name + updated_gen_model_name_MW)
+        print(f"Updated model saved as {updated_gen_model_name_MW}")
+        print("*******************************************************************************")
+        print()
+
+    elif model_type == "generator Mvar model":
+        print("*********** CREATING UPDATED GENERATOR Mvar MODEL **************************")
+        torch.save(model.state_dict(), dir_name + updated_gen_model_name_Mvar)
+        print(f"Updated model saved as {updated_gen_model_name_Mvar}")
+        print("*******************************************************************************")
+        print()
+
 
 ######################################### FUNCTIONS FOR New Test #######################################################
 def predict(model, new_features_,new_targets_, criterion = nn.MSELoss(), on_the_fly = 0):
@@ -814,12 +948,6 @@ def predict(model, new_features_,new_targets_, criterion = nn.MSELoss(), on_the_
 
 
 
-
-
-
-
-
-
 ##################################### S T A R T O F A P P L I C A T I O N ############################################################
     
 if selected_dirname:
@@ -827,14 +955,16 @@ if selected_dirname:
     tab1.markdown("###### Recent Activity")
     tab2.markdown("###### Grid Information")
     tab3.markdown("###### ML Model Architecture")
-    tab3.info(f" Current Training Domain Upper Limit is: {training_domain_UB}")
+    tab3.info(f" Current Training Domain upper limit is: {training_domain_UB:.2f}")
+
 
     st.session_state.buses, st.session_state.buses_wt_load, st.session_state.buses_wt_gen,\
-        st.session_state.base_gen_MW, st.session_state.base_gen_MVar, st.session_state.base_load_MW, st.session_state.base_load_MVar, st.session_state.base_VPU = collectGridData(dir_name, base_case=1)
+        st.session_state.base_gen_MW, st.session_state.base_gen_Mvar, st.session_state.base_load_MW,\
+              st.session_state.base_load_Mvar, st.session_state.base_VPU = collectGridData(dir_name, base_case=1)
     
     buses = st.session_state.buses; buses_wt_load = st.session_state.buses_wt_load; buses_wt_gen = st.session_state.buses_wt_gen
-    base_gen_MW = st.session_state.base_gen_MW; base_gen_MVar = st.session_state.base_gen_MVar
-    base_load_MW = st.session_state.base_load_MW; base_load_MVar = st.session_state.base_load_MVar
+    base_gen_MW = st.session_state.base_gen_MW; base_gen_Mvar = st.session_state.base_gen_Mvar
+    base_load_MW = st.session_state.base_load_MW; base_load_Mvar = st.session_state.base_load_Mvar
     base_VPU = st.session_state.base_VPU
 
 #     st.session_state.log1 = tab1.text_area("Grid Information", f"Buses with Load: {str(buses_wt_load)[1:-1]}\n\n\
@@ -860,15 +990,28 @@ Buses with Generators: {str(buses_wt_gen)[1:-1]}", label_visibility="hidden") #\
                                                                         'LoadStatus' : str, 'Latitude:1' : np.float64, 'Longitude:1' : np.float64,
                                                                         'BusNomVolt' : np.float64}
         )
-        v = {}
+        ############## Base VPU ################################################################################
+        vpu_base = {}
         buses["Vpu"] = 0.0
         buses["size"] = 10
         for i, bus in base_VPU.items():
-            v[str(i)] = bus['vm']
-        st.session_state.buses_df = buses.apply(update_voltage, axis=1, args=(v,))
+            vpu_base[str(i)] = bus['vm']
+        st.session_state.buses_basevpu_df = buses.apply(update_voltage, axis=1, args=(vpu_base,))
         plot_container = st.container(border=True)
         #plot_map(st.session_state, plot_container,buses_df, branches)
-        plot_map(st.session_state, col1_p1, st.session_state.buses_df, branches, "Original Bus Voltages")
+        plot_map(st.session_state, col1_p1, st.session_state.buses_basevpu_df, branches, "Original Bus Voltages")
+
+                ############## Base VPU ################################################################################
+        vangle_base = {}
+        # buses["Vpu"] = 0.0
+        # buses["size"] = 10
+        for i, bus in base_VPU.items():
+            vangle_base[str(i)] = bus['va']
+        st.session_state.buses_basevangle_df = buses.apply(update_voltage, axis=1, args=(vangle_base,))
+        plot_container = st.container(border=True)
+        #plot_map(st.session_state, plot_container,buses_df, branches)
+        plot_map(st.session_state, col1_p1, st.session_state.buses_basevangle_df, branches, "Original Bus Angle")
+
      ################ E N D  P L O T M A P ###################################################################################
 
 else:
@@ -886,7 +1029,7 @@ load_changes = st.sidebar.radio('Select Load Change Procedure', options=[1, 2,3]
 
 ##################################################### LOAD BASE ML MODELS #########################################################################
 if selected_dirname:
-    base_model, gen_model = runModel()
+    bus_model_vpu, bus_model_vang, gen_model_MW, gen_model_Mvar = runModel()
 ##################################################### END OF  LOAD BASE ML MODELS #####################################################################
 
 ## Collect grid information from base case (default system)  
@@ -995,7 +1138,11 @@ with tab1:
             tab2.markdown(f"*User-defined Load Changes*")
             tab2.data_editor(df)
 
-################################################################################################################################################
+
+
+################################################################################################################################
+#################################################### PREDICTION FOR GEN POWER AND VOLTAGE ######################################
+
 if len(change_list) > 0 and (load_changes == 1 or st.session_state.getButton == 1):
     
     #col_sb1, col_sb2 = st.sidebar.columns(2, gap = "medium")
@@ -1013,12 +1160,20 @@ if len(change_list) > 0 and (load_changes == 1 or st.session_state.getButton == 
         base_gen_MW_mask = np.zeros(num_buses)
         base_gen_MW_arr[buses_wt_gen-1] = base_gen_MW
         base_gen_MW_mask[buses_wt_gen-1] = np.array(base_gen_MW, dtype='bool')
+
+        base_gen_Mvar_arr = np.zeros(num_buses)
+        base_gen_Mvar_mask = np.zeros(num_buses)
+        base_gen_Mvar_arr[buses_wt_gen-1] = base_gen_Mvar
+        base_gen_Mvar_mask[buses_wt_gen-1] = np.array(base_gen_Mvar, dtype='bool')
     
     with tab3:
         col1_t3, col2_t3 = st.columns(2, gap = "large")
 
     if predict_button:
-        try:
+        if training_domain_UB > training_domain_limit:
+            tab1.warning(f"First on-the-fly criteria failed: Training upper bound ({training_domain_limit}) is less than current upper limit ({training_domain_UB})", icon="⚠️")
+
+        if True:
             # Make dictionary for changes in load
             buses_wt_load_MWdict = {}
             buses_wt_load_MVardict = {}
@@ -1026,7 +1181,7 @@ if len(change_list) > 0 and (load_changes == 1 or st.session_state.getButton == 
         
             for bus_ind, bus in enumerate(buses_wt_load):
                 buses_wt_load_MWdict[str(bus)] = base_load_MW[bus_ind]
-                buses_wt_load_MVardict[str(bus)] = base_load_MVar[bus_ind]
+                buses_wt_load_MVardict[str(bus)] = base_load_Mvar[bus_ind]
             
             for bus_ind,bus in enumerate(buses_to_change_load_list[0]):
                 buses_to_change_load_dict[str(bus)] = change_list[0][bus_ind]
@@ -1040,86 +1195,161 @@ if len(change_list) > 0 and (load_changes == 1 or st.session_state.getButton == 
                     f_MVar_list.append(buses_wt_load_MVardict[bus] * buses_to_change_load_dict[bus])
                 else:
                     f_MW[bus] = base_load_MW[bus_ind]
-                    f_MVar[bus] = base_load_MVar[bus_ind]
+                    f_MVar[bus] = base_load_Mvar[bus_ind]
                     f_MW_list.append(base_load_MW[bus_ind])
-                    f_MVar_list.append(base_load_MVar[bus_ind])
+                    f_MVar_list.append(base_load_Mvar[bus_ind])
 
-            ###################### Predict generator VPU ############################################################################
-            f = torch.cat((torch.tensor(f_MW_list), torch.tensor(f_MVar_list), torch.tensor(base_gen_MW_arr))) 
-            f_gen = torch.reshape(f, (1,-1))
+            ###################### PREDICT GENERATOR MW ############################################################################
+            f = torch.cat((torch.tensor(f_MW_list), torch.tensor(f_MVar_list), torch.tensor(base_gen_MW_arr), torch.tensor(base_gen_Mvar_arr))) 
+            f_gen_MW = torch.reshape(f, (1,-1))
             t = torch.tensor(base_gen_MW_arr)
-            t_gen = torch.reshape(t, (1,-1))
+            t_gen_MW = torch.reshape(t, (1,-1))
 
-            gen_VPU_pred, test_losses = predict(gen_model, f_gen, t_gen, criterion = nn.MSELoss(), on_the_fly = 0)
-            gen_VPU_masked = gen_VPU_pred*base_gen_MW_mask
+            print("#&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&#\n")
+            print(f"feature shape = {np.shape(f_gen_MW)}")
+            print(f"target shape = {np.shape(t_gen_MW)}")
+            print(gen_model_MW)
+            print(bus_model_vpu)
 
-            tab1.write("Predicted Gen VPU (See Model information tab for more.)")
-            tab1.write(gen_VPU_masked)
+            gen_MW_pred, test_losses = predict(gen_model_MW, f_gen_MW, t_gen_MW, criterion = nn.MSELoss(), on_the_fly = 0)
+            gen_MW_masked = gen_MW_pred*base_gen_MW_mask
 
-            col1_t3.write(f"Input: {f_gen.shape}")
-            col1_t3.write(f_gen)
+            tab1.write(f"Predicted Gen Active Power [MW]. Sum of Active Gen. Power = {np.round(np.sum(gen_MW_masked.numpy()),4)} MW")
+    
+            tab1.dataframe(pd.DataFrame(gen_MW_masked, index =["MW"], columns=("B %d" % (i+1) for i in range(len(gen_MW_masked[0])))))
 
-            col1_t3.write(f"Predicted Gen VPU: {gen_VPU_masked.shape}")
-            col1_t3.write(gen_VPU_masked)
+            col1_t3.write(f"Input for Gen. Active Power Prediction:       {f_gen_MW.shape}")
+            col1_t3.write(f_gen_MW)
+
+            col1_t3.write(f"Predicted Gen Active Power [MW]: {gen_MW_masked.shape}")
+            
+            col1_t3.write(gen_MW_masked)
             #****************************************************************************************************************************#
+
+            ###################### PREDICT GENERATOR MVAR ############################################################################
+            f = torch.cat((torch.tensor(f_MW_list), torch.tensor(f_MVar_list), torch.tensor(base_gen_Mvar_arr), torch.tensor(base_gen_Mvar_arr))) 
+            f_gen_Mvar = torch.reshape(f, (1,-1))
+            t = torch.tensor(base_gen_Mvar_arr)
+            t_gen_Mvar = torch.reshape(t, (1,-1))
+
+            gen_Mvar_pred, test_losses = predict(gen_model_Mvar, f_gen_Mvar, t_gen_Mvar, criterion = nn.MSELoss(), on_the_fly = 0)
+            gen_Mvar_masked = gen_Mvar_pred*base_gen_Mvar_mask
+
+            tab1.write(f"Predicted Gen Reactive Power [Mvar]. Sum of Reactive Gen. Power = {np.round(np.sum(gen_Mvar_masked.numpy()),4)} Mvar")
+    
+            tab1.dataframe(pd.DataFrame(gen_Mvar_masked, index =["Mvar"], columns=("B %d" % (i+1) for i in range(len(gen_Mvar_masked[0])))))
+
+            col1_t3.write(f"Input for Gen. Reactive Power Prediction:      {f_gen_Mvar.shape}")
+            col1_t3.write(f_gen_Mvar)
+
+            col1_t3.write(f"Predicted Gen Reactive Power [Mvar]: {gen_Mvar_masked.shape}")
+            
+            col1_t3.write(gen_Mvar_masked)
+            #****************************************************************************************************************************#
+
+            ###### Checking Generator Power Saturation Criteria for on-the-fly ##################################################################
+            P_sum = np.sum(gen_MW_masked.numpy())
+            Q_sum = np.sum(gen_Mvar_masked.numpy())
+            print(f"P_sum [MW]= {P_sum}     and       Q_sum [Mvar] = {Q_sum}")
+            power_limit_var, power_limit_val = readGenPowerLimit(retrain_folder+ "\\" + selected_dirname + gen_power_limit_file)
+            power_limit_dict = dict(zip(power_limit_var, power_limit_val))
+            tab2.dataframe(power_limit_dict)
+
+
+            if not power_limit_dict["Sigma_P_min"] < P_sum <  power_limit_dict["Sigma_P_max"]:
+                tab1.error(f"Second on-the-fly criteria failed: Sum of MW is outsided training range (see Tab 2). Implement on-the-🪰", icon="🚨")
+
+            if not power_limit_dict["Sigma_Q_min"] < Q_sum <  power_limit_dict["Sigma_Q_max"]:
+                tab1.error(f"Second on-the-fly criteria failed: Sum of Mvar is outsided training range (see Tab 2). Implement on-the-🪰", icon="🚨")
+
 
             ###################### Predict Volatage Magnitude (VPU) ###############################################################################
 
-            f = torch.cat((torch.tensor(f_MW_list), torch.tensor(f_MVar_list), torch.reshape(gen_VPU_masked, (-1,)))) 
-            f_bus = torch.reshape(f, (1,-1))
-            t = torch.tensor(base_gen_MW_arr)
-            t_bus = torch.reshape(t, (1,-1))
-            bus_VPU_pred, test_losses = predict(base_model, f_bus, t_bus, criterion = nn.MSELoss(), on_the_fly = 0)
+            f = torch.cat((torch.tensor(f_MW_list), torch.tensor(f_MVar_list), torch.reshape(gen_Mvar_masked, (-1,)))) 
+            f_bus_vpu = torch.reshape(f, (1,-1))
+            t = torch.tensor(base_gen_Mvar_arr)
+            t_bus_vpu = torch.reshape(t, (1,-1))
+            bus_VPU_pred, test_losses = predict(bus_model_vpu, f_bus_vpu, t_bus_vpu, criterion = nn.MSELoss(), on_the_fly = 0)
+
+            bus_VPU_pred_np = np.round(bus_VPU_pred.numpy(),4)
     
-            tab1.write("Predicted Bus VPU (See Model information tab for more.)")
-            tab1.write(bus_VPU_pred)
+            tab1.write("Predicted Bus Voltage Magnitude [vpu] (See Model information tab for more.)")
+            tab1.dataframe(pd.DataFrame(bus_VPU_pred_np, index =["VPU"], columns=("B %d" % (i+1) for i in range(len(bus_VPU_pred[0])))))
 
-            col2_t3.write(f"Input: {f_bus.shape}")
-            col2_t3.write(f_bus)
+            col2_t3.write(f"Input for Voltage Magnitude Prediction:      {f_bus_vpu.shape}")
+            col2_t3.write(f_bus_vpu)
 
-            col2_t3.write(f"Predicted Bus VPU: {bus_VPU_pred.shape}")
+            col2_t3.write(f"Predicted Bus Voltage [vpu]: {bus_VPU_pred.shape}")
             col2_t3.write(bus_VPU_pred)
-        except:
-            st.error("No model Found. Please check Directory", icon="🚨")
+
+
+            ###################### Predict Volatage Angle (VANGLE) ###############################################################################
+
+            f = torch.cat((torch.tensor(f_MW_list), torch.tensor(f_MVar_list), torch.reshape(gen_MW_masked, (-1,)))) 
+            f_bus_vang = torch.reshape(f, (1,-1))
+            t = torch.tensor(base_gen_MW_arr)
+            t_bus_vang = torch.reshape(t, (1,-1))
+            bus_vang_pred, test_losses = predict(bus_model_vang, f_bus_vang, t_bus_vang, criterion = nn.MSELoss(), on_the_fly = 0)
+
+            bus_vang_pred_np = np.round(bus_vang_pred.numpy(),4)
+    
+            tab1.write("Predicted Bus Voltage Angles [vangle] (See Model information tab for more.)")
+            tab1.dataframe(pd.DataFrame(bus_vang_pred_np, index =["Vangle"], columns=("B %d" % (i+1) for i in range(len(bus_vang_pred[0])))))
+
+            col2_t3.write(f"Input for Voltage Angle Prediction:      {f_bus_vang.shape}")
+            col2_t3.write(f_bus_vang)
+
+            col2_t3.write(f"Predicted Bus Voltage Angles [vangle]: {bus_vang_pred.shape}")
+            col2_t3.write(bus_vang_pred)
+        # except:
+        #     st.error("No model Found. Please check Directory", icon="🚨")
+
+
+        ##################### Checking Power/Energy Conservation Criteria for on-the-🪰 implementation #######################################
+
+        #---------------------------------- SUM of POWER PER BUS ----------------------------------------------------------------------------#
+
+
+
+
+
 
         ########################## PLOT Predicted MAP ################################################################
         with tab2:
-            v = {}
+            ############### VPU PLOT ####################################
+            vpu = {}
             pred_VPU_numpy = bus_VPU_pred[0].numpy()
             #st.write(len(pred_VPU_numpy))
             for i, _vpu in enumerate(pred_VPU_numpy): #vpu_ in enumerate(bus_VPU_pred[0].numpy()):
                 #st.write(i)
-                v[str(i+1)] = _vpu
+                vpu[str(i+1)] = _vpu
             
             #st.write(v)
-            st.session_state.buses_df_pred = buses.apply(update_voltage, axis=1, args=(v,))
+            st.session_state.buses_vpu_df_pred = buses.apply(update_voltage, axis=1, args=(vpu,))
 
             #plot_container = st.container(border=True)
             #plot_map(st.session_state, plot_container, st.session_state.buses_df, branches)
 
-            plot_map(st.session_state, col2_p2, st.session_state.buses_df_pred, branches,  "Predicted Bus Voltages")
+            plot_map(st.session_state, col2_p2, st.session_state.buses_vpu_df_pred, branches,  "Predicted Bus Voltages [vpu]")
+
+
+            ############### VANGLE PLOT ####################################
+            vangle = {}
+            pred_vang_numpy = bus_vang_pred[0].numpy()
+            #st.write(len(pred_VPU_numpy))
+            for i, _vangle in enumerate(pred_vang_numpy):
+                #st.write(i)
+                vangle[str(i+1)] = _vangle
+            
+            #st.write(v)
+            st.session_state.buses_vang_df_pred = buses.apply(update_voltage, axis=1, args=(vangle,))
+
+            plot_map(st.session_state, col2_p2, st.session_state.buses_vang_df_pred, branches,  "Predicted Bus Angle [vangle]")
         ########################## PLOT Predicted MAP ################################################################
 
 
-# @st.dialog("Run on-the-🪰?")
-# def retrainChoice():
-#     st.write("If Yes, a new dataset for the training domain will be created using PowerModel. Note that this may take a while")
-#     st.write("I want to run on-the on-the-🪰")
-#     no_col, yes_col = st.columns(2)
-#     no_button_ = no_col.button("No", key = "no_button")
-#     yes_button_ = yes_col.button("Yes", key = "yes_button")
-#     if no_button_:
-#         st.session_state.retrain_choice = False
-#         st.rerun()
-#     elif yes_button_:
-#         st.session_state.retrain_choice = True
-#         st.rerun()
-# with tab1:
-#     if "on_the_fly" in st.session_state and st.session_state.on_the_fly:
-#         if "retrain_choice" not in st.session_state:
-#             retrainChoice()
 
-
+################################# ON THE FLY IMPLEMENTATION ###############################################################
 with tab1:
     if "on_the_fly" in st.session_state and st.session_state.on_the_fly:
         col_confirm, col_retrain = st.columns(2, gap = "small")
@@ -1159,7 +1389,9 @@ with tab1:
                             st.write("Generating PowerModel data")
                             os.system("python " + julia_script_path)
 
-                            st.write("Training New Model")
+                            st.write("***Training New Model***")
+                            st.write(on_the_fly_update(retrain_json_loc = loc))
+                        
                             generateRetrainModels(retrain_json_loc = loc)
                             
                 st.success("On-the-🪰 Generated!")
@@ -1168,26 +1400,31 @@ with tab1:
                 st.info("Continue with Prediction. Make sure you are within the training domain")
 
 
-
-# Load Base model if available
+######## Visualize ML Models in Tab 3 of App ########################################################
 if selected_dirname:
-    if os.path.exists(dir_name + base_model_name):   
+    if os.path.exists(dir_name + base_model_name_vpu ):   
         ## Load Existing data
         
         tab3.write("")
         tab3.markdown("###### Bus VPU Model Details: ")
-        tab3.write(base_model)
+        tab3.write(bus_model_vpu)
     else:
         tab3.error("Please add a .pth file for the ML base model. See Documentation")
 
     
-    if os.path.exists(dir_name + gen_model_name):   
+    if os.path.exists(dir_name + gen_model_name_MW):   
        
         tab3.write("")
         tab3.markdown("###### Generator VPU Model Details: ")
-        tab3.write(gen_model)
+        tab3.write(gen_model_MW)
     else:
         tab3.error("Please add a .pth file for the ML Generator VPU model. See Documentation")
 
+st.sidebar.text("")
+st.sidebar.text("")
+st.sidebar.text("")
+st.sidebar.text("")
 
+st.sidebar.markdown("********")
+st.sidebar.image(lanl_logo, width=210)
 ######################### E N D  O F  T H E  A L G O R I T M ######################################################################
