@@ -6,3 +6,5 @@ pyjulia
 plotly
 pandas
 numpy
+scipy
+matplotlib
