@@ -42,10 +42,10 @@ st.set_page_config(
 )
 
 #----------------- Parameters ---------------------------------#
-logo = ".\etc\Setup Files\LOGO.png"
-domain_file = "\Training Domain.txt"
-julia_params = ".\etc\Setup Files\Julia Parameters.txt"
-retrain_folder = ".\etc\on-the-fly"
+logo = "./etc/Setup Files/LOGO.png"
+domain_file = "/Training Domain.txt"
+julia_params = "./etc/Setup Files/Julia Parameters.txt"
+retrain_folder = "./etc/on-the-fly"
 base_training_domian_limit = 5.0
 
 def readTrainingDomain(txt_path):
