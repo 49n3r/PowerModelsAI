@@ -86,7 +86,7 @@ st.session_state.getButton = 0
 
 
 num_buses = 10
-dir_path='.\CaseModels'
+dir_path='./CaseModels'
 dir_names = os.listdir(dir_path)
 
 selected_dirname = st.sidebar.selectbox('Select a Case-System', dir_names, index = None,  placeholder="Select a case", on_change=disableCaseSelect, args=(False,),)
@@ -97,7 +97,7 @@ if selected_dirname:
     st.session_state.dir_name_st = os.path.join(dir_path, selected_dirname) #file_selector()
     dir_name = st.session_state.dir_name_st
 
-    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "\\" + selected_dirname + domain_file)
+    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "//" + selected_dirname + domain_file)
     training_domain_limit = st.session_state.training_domain_limit
 
     ######################### Initializations (including helper functions) #########################
