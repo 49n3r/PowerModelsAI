@@ -36,7 +36,7 @@ import time
 
 ############################ INITIALIZATION FUNCTIONS ###############################################################
 st.set_page_config(
-    page_title="PoWerML",
+    page_title="PM-AI",
     page_icon="⚡",
     layout="wide"
 )
@@ -93,7 +93,7 @@ def retain():
 
 #*************************************************************************** S T A R T ***************************************************************************#
 #st.set_page_config(page_title="Carbon Nanotube Initializer", page_icon="https://chinonsougwumadu.com/wp-content/uploads/2024/05/microsoftteams-image-17.jpg")
-st.markdown("## PowerModels :flag-ai:")
+st.markdown("## PowerModel-:flag-ai:")
 
 st.sidebar.image(logo, width=120)
 st.session_state.getButton = 0
