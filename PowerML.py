@@ -71,7 +71,7 @@ retrain_folder = "./etc/on-the-fly"
 #--------------------------------------------------------------#
 
 welcome = '\n\n\n\n # Hello there! 👋 \
-\n \n \n ###### I am :blue[PowerModel-:flag-ai:] :robot_face:, conceived from the research publication titled: ***PowerModel-:flag-ai::  A First On-the-fly Machine-Learning Predictor for AC Power Flow Solutions.***\
+\n \n \n ###### I am :blue[PowerModel-AI] :robot_face:, conceived from the research publication titled: ***PowerModel-AI:  A First On-the-fly Machine-Learning Predictor for AC Power Flow Solutions.***\
 \n \n ###### Feel free to use my capabilities for :blue-background[non-profit endeavors] :100:, but please remember to :violet[cite my parents] :point_up_2: in your work.\
 \n \n ###### Thank you, and enjoy exploring my features! :tada:\n'
 
