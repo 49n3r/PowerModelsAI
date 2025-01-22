@@ -1,0 +1,2 @@
+Sigma_P_max		Sigma_P_min		Sigma_Q_max		Sigma_Q_min		
+10.4082			1.8082			11.1539			0.4749			

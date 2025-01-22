@@ -1,0 +1,2 @@
+base_training_domian_limit:	3.0
+new_training_domian_limit:	3.0
