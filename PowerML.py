@@ -62,12 +62,12 @@ st.set_page_config(
 )
 
 #----------------- Parameters ---------------------------------#
-logo = ".\etc\Setup Files\PM_LOGO.png"
-lanl_logo = ".\etc\setup Files\LANL-LOGO.png"
-domain_file = "\Training Domain.txt"
-gen_power_limit_file = "\Gen Power Limits.txt"
-julia_params = ".\etc\Setup Files\Julia Parameters.txt"
-retrain_folder = ".\etc\on-the-fly"
+logo = "./etc/Setup Files/PM_LOGO.png"
+lanl_logo = "./etc/setup Files/LANL-LOGO.png"
+domain_file = "/Training Domain.txt"
+gen_power_limit_file = "/Gen Power Limits.txt"
+julia_params = "./etc/Setup Files/Julia Parameters.txt"
+retrain_folder = "./etc/on-the-fly"
 #--------------------------------------------------------------#
 
 welcome = '\n\n\n\n # Hello there! 👋 \
@@ -307,7 +307,7 @@ def cleanSlate():
 
 def getUpperBound():
     if "training_domain_UB" in st.session_state:
-        st.session_state["training_domain_UB"] = readTrainingDomain(retrain_folder+ "\\" + selected_dirname + domain_file)
+        st.session_state["training_domain_UB"] = readTrainingDomain(retrain_folder+ "//" + selected_dirname + domain_file)
 
 #*******************************************************************************************#
 
@@ -402,7 +402,7 @@ st.markdown("## PowerModel-:flag-ai:")
 st.sidebar.image(logo, width=200)
 st.session_state.getButton = 0
 num_buses = 10
-dir_path='.\CaseModels'
+dir_path='./CaseModels'
 dir_names = os.listdir(dir_path)
 
 # The power grid is selected using this select box
@@ -410,7 +410,7 @@ selected_dirname = st.sidebar.selectbox('Select Bus Case:', dir_names, index = N
 
 if selected_dirname:
     # Read the base model training domain
-    with open(retrain_folder+ "\\" + selected_dirname + domain_file, "r") as f:
+    with open(retrain_folder+ "//" + selected_dirname + domain_file, "r") as f:
         line1 = f.readline()
         base_training_domain_limit = float(line1.rstrip('\t').split()[1])
 
@@ -420,7 +420,7 @@ if selected_dirname:
     dir_name = st.session_state.dir_name_st
 
     # Get the upper training limit in file.
-    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "\\" + selected_dirname + domain_file)
+    st.session_state.training_domain_limit = readTrainingDomain(retrain_folder+ "//" + selected_dirname + domain_file)
     training_domain_limit = st.session_state.training_domain_limit
 
     # this initialize the training domains to be used later
