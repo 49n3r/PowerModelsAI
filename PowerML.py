@@ -398,7 +398,7 @@ def runPowerModelJL():
 #----------------------------------------------------------- Set-UP Stage 2 ---------------------------------------------------------------#
 
 ## More set-up initializations
-st.markdown("## PowerModel-:flag-ai:")
+st.markdown("## PowerModel-AI")
 st.sidebar.image(logo, width=200)
 st.session_state.getButton = 0
 num_buses = 10
