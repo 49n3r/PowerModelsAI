@@ -763,7 +763,7 @@ class mld:
         None
         """
         file = self.modelFile
-        file = file.replace('\\', "\\\\")
+        file = file.replace('//', "////")
         self.io.write(f'data = PowerModels.parse_file("{file}")\n')
         # Shut off shunts (Future Plan)
         self.io.write(f'buses = []\n') 
@@ -1242,7 +1242,7 @@ def genFeatureEngineering(retrain_json_loc, gen_power_type):
         power_limit_dict_training = {"Sigma_P_max":np.round(np.max(sum_generation_MW),4), "Sigma_P_min":np.round(np.min(sum_generation_MW),4),
                                   "Sigma_Q_max":np.round(np.max(sum_generation_Mvar),4), "Sigma_Q_min":np.round(np.min(sum_generation_Mvar),4)}
         
-        writeGenPowerLimit(retrain_folder+ "\\" + selected_dirname + gen_power_limit_file, power_limit_dict_training)
+        writeGenPowerLimit(retrain_folder+ "//" + selected_dirname + gen_power_limit_file, power_limit_dict_training)
         col_confirm.write(power_limit_dict_training)
 
     return features, targets
@@ -1781,7 +1781,7 @@ if len(change_list) > 0 and (load_changes == 1 or st.session_state.getButton == 
             Q_sum = np.sum(gen_Mvar_masked.numpy())
             print("Checking Criteria for on-the-fly Implementation:")
             print(f"P_sum [MW]= {P_sum:.3f}   and   Q_sum [Mvar] = {Q_sum:.3f}\n")
-            power_limit_var, power_limit_val = readGenPowerLimit(retrain_folder+ "\\" + selected_dirname + gen_power_limit_file)
+            power_limit_var, power_limit_val = readGenPowerLimit(retrain_folder+ "//" + selected_dirname + gen_power_limit_file)
             power_limit_dict = dict(zip(power_limit_var, power_limit_val))
             tab2.dataframe(power_limit_dict)
 
@@ -1885,14 +1885,14 @@ with tab1:
                 if True: 
                     julia_script_path = './RunJuliaScript.py'  
 
-                    writeTrainingDomain(retrain_folder+ "\\" + selected_dirname + domain_file, str(np.round(training_domain_UB,2)), str(np.round(base_training_domain_limit,2)))
+                    writeTrainingDomain(retrain_folder+ "//" + selected_dirname + domain_file, str(np.round(training_domain_UB,2)), str(np.round(base_training_domain_limit,2)))
 
                     with st.status("Updating PowerModel-AI On-the-🪰...", expanded=False):
                         st.write("Julia script for PowerModels.jl implementation created")
-                        loc = retrain_folder + '\\' + selected_dirname
+                        loc = retrain_folder + '//' + selected_dirname
                         for file in os.listdir(loc):
                             if '.m' in file:
-                                test_case_m = loc + '\\' + file
+                                test_case_m = loc + '//' + file
 
                                 jl_file = loc + "\juliaScript.jl"
                                 writeJuliaPath(julia_params, jl_file)
